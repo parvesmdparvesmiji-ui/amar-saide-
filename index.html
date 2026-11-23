@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Granitic System - Live Signal Updates</title>
+  <style>
+    :root {
+      --bg-granite: #080b12;
+      --card-granite: #111622;
+      --border-granite: #232d42;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-rose: #f43f5e;
+      --text-main: #f1f5f9;
+      --text-muted: #64748b;
+    }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-granite);
+      background-image: radial-gradient(circle at 50% 0%, #172033 0%, #080b12 75%);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 15px;
+      box-sizing: border-box;
+    }
+    .granite-container {
+      background: var(--card-granite);
+      padding: 22px;
+      border-radius: 16px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      width: 100%;
+      max-width: 400px;
+      border: 1px solid var(--border-granite);
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-granite);
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+    }
+    .brand-title {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      color: #e2e8f0;
+    }
+    .brand-sub {
+      font-size: 10px;
+      color: var(--accent-cyan);
+      display: block;
+      font-family: monospace;
+    }
+    .node-badge {
+      background: rgba(6, 182, 212, 0.12);
+      color: var(--accent-cyan);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      font-family: monospace;
+    }
+    /* গ্রানাইট প্রসেসিং বার */
+    .pipeline-bar {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .node-step {
+      flex: 1;
+      background: #0a0e17;
+      border: 1px solid #1e293b;
+      padding: 6px 4px;
+      border-radius: 6px;
+      font-size: 10px;
+      text-align: center;
+      color: var(--text-muted);
+      font-family: monospace;
+      transition: all 0.2s;
+    }
+    .node-step.active {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      background: rgba(6, 182, 212, 0.1);
+      box-shadow: 0 0 10px rgba(6, 182, 212, 0.2);
+    }
+    .signal-core {
+      background: #090d16;
+      padding: 18px;
+      border-radius: 12px;
+      border: 1px solid #1e293b;
+      text-align: center;
+      margin-bottom: 14px;
+      position: relative;
+    }
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: monospace;
+      margin-bottom: 10px;
+    }
+    .signal-output {
+      font-size: 27px;
+      font-weight: 900;
+      margin: 8px 0;
+      letter-spacing: 1.2px;
+    }
+    .buy-text { color: var(--accent-emerald); text-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
+    .sell-text { color: var(--accent-rose); text-shadow: 0 0 15px rgba(244, 63, 94, 0.3); }
+    .idle-text { color: var(--accent-cyan); }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed #1e293b;
+    }
+    .metric-box {
+      background: #111622;
+      padding: 6px;
+      border-radius: 6px;
+      font-size: 11px;
+    }
+    .metric-label {
+      color: var(--text-muted);
+      font-size: 10px;
+      display: block;
+    }
+    .metric-val {
+      font-weight: 700;
+      color: #e2e8f0;
+      font-family: monospace;
+    }
+    .timer-strip {
+      text-align: center;
+      font-size: 12px;
+      color: #fbbf24;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    button {
+      border: none;
+      padding: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      flex: 1;
+      letter-spacing: 0.5px;
+      transition: all 0.15s;
+    }
+    button:active { transform: scale(0.97); }
+    .btn-exec {
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: white;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+    }
+    .btn-auto {
+      background: #1e293b;
+      color: #cbd5e1;
+      border: 1px solid #334155;
+    }
+    .btn-auto.on {
+      background: #059669;
+      color: white;
+      border-color: #10b981;
+    }
+    /* সিস্টেম লগ কনসোল */
+    .log-console {
+      background: #06090f;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 10px;
+      height: 85px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 11px;
+      color: #94a3b8;
+      text-align: left;
+    }
+    .log-line {
+      margin-bottom: 4px;
+      border-bottom: 1px solid #0f172a;
+      padding-bottom: 2px;
+    }
+    .log-time { color: var(--accent-cyan); }
+    /* স্ক্রিন রিডার টেক্সট */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="granite-container">
+    <div class="top-bar">
+      <div>
+        <span class="brand-title">MD PARVES • GRANITIC CORE</span>
+        <span class="brand-sub">SYS_ARCH: v4.2 MULTI-NODE</span>
+      </div>
+      <span class="node-badge" id="core-status">CORE: ONLINE</span>
+    </div>
+
+    <!-- ৩-ধাপের গ্রানাইট প্রসেসিং নোড -->
+    <div class="pipeline-bar">
+      <div class="node-step" id="step-1">1. DATA SCAN</div>
+      <div class="node-step" id="step-2">2. NODE SYNC</div>
+      <div class="node-step" id="step-3">3. SIGNAL LOCK</div>
+    </div>
+
+    <!-- সিগন্যাল ডিসপ্লে -->
+    <div class="signal-core">
+      <div class="meta-row">
+        <span id="sig-hash">HASH: #00000</span>
+        <span id="sig-conf">ACC: --%</span>
+      </div>
+      <div class="signal-output idle-text" id="sig-main">GRANITIC STANDBY</div>
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <span class="metric-label">ENTRY</span>
+          <span class="metric-val" id="val-entry">----</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">TARGET (TP)</span>
+          <span class="metric-val" id="val-tp">----</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">STOP (SL)</span>
+          <span class="metric-val" id="val-sl">----</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="timer-strip" id="timer-display">অটো গ্রানাইট সিঙ্ক: বন্ধ</div>
+
+    <div class="controls">
+      <button class="btn-exec" onclick="runGraniticCycle()">SYNC SIGNAL</button>
+      <button class="btn-auto" id="auto-btn" onclick="toggleGraniticAuto()">AUTO: OFF</button>
+    </div>
+
+    <!-- লাইভ সিস্টেম লগ -->
+    <div class="log-console" id="sys-logs">
+      <div class="log-line"><span class="log-time">[INIT]</span> Granitic Engine initialized...</div>
+    </div>
+  </div>
+
+  <!-- লুকানো ARIA Live Region -->
+  <div id="live-notifier" class="sr-only" aria-live="assertive"></div>
+
+  <script>
+    let cycleCount = 0;
+    let autoTimer = null;
+    let secTimer = null;
+    let countdown = 10;
+
+    function addSystemLog(text) {
+      const consoleBox = document.getElementById("sys-logs");
+      const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
+      const line = document.createElement("div");
+      line.className = "log-line";
+      line.innerHTML = `<span class="log-time">[${time}]</span> ${text}`;
+      consoleBox.prepend(line);
+    }
+
+    function playGraniticTone() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(920, ctx.currentTime);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.14);
+      } catch (e) {}
+    }
+
+    function runGraniticCycle() {
+      const s1 = document.getElementById("step-1");
+      const s2 = document.getElementById("step-2");
+      const s3 = document.getElementById("step-3");
+      const status = document.getElementById("core-status");
+
+      // রিসেট নোড
+      s1.className = "node-step active";
+      s2.className = "node-step";
+      s3.className = "node-step";
+      status.textContent = "CORE: SCANNING";
+      addSystemLog("Node 1: Scanning data stream...");
+
+      setTimeout(() => {
+        s2.className = "node-step active";
+        addSystemLog("Node 2: Verifying granitic pattern...");
+      }, 250);
+
+      setTimeout(() => {
+        s3.className = "node-step active";
+        status.textContent = "CORE: LOCKED";
+        finalizeGraniticSignal();
+      }, 500);
+    }
+
+    function finalizeGraniticSignal() {
+      cycleCount++;
+      const hash = "GR-" + Math.random().toString(36).substring(2, 6).toUpperCase();
+      const accuracy = Math.floor(Math.random() * (96 - 84 + 1)) + 84;
+
+      const pool = [
+        { dir: "BUY", pair: "GBP/USD", entry: "1.2655", tp: "1.2715", sl: "1.2605", cls: "buy-text" },
+        { dir: "SELL", pair: "GBP/USD", entry: "1.2640", tp: "1.2580", sl: "1.2690", cls: "sell-text" },
+        { dir: "BUY", pair: "EUR/USD", entry: "1.0845", tp: "1.0895", sl: "1.0805", cls: "buy-text" },
+        { dir: "SELL", pair: "XAU/USD", entry: "2648.0", tp: "2632.0", sl: "2658.0", cls: "sell-text" }
+      ];
+
+      const pick = pool[Math.floor(Math.random() * pool.length)];
+
+      // UI আপডেট
